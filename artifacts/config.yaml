@@ -1,0 +1,5 @@
+input_dim: 14
+num_classes: 7
+hidden_dim: 64
+dropout: 0.2
+nombre_modelo: "RedAutoinmuneGated-v1.0"

@@ -1,0 +1,18 @@
+{
+  "variables_requeridas": [
+    "Age", "Gender", "ESR", "CRP", "RF", "Anti-CCP",
+    "HLA-B27", "ANA", "Anti-Ro", "Anti-La", "Anti-dsDNA", "Anti-Sm",
+    "C3", "C4"
+  ],
+  "variables_continuas": ["Age", "ESR", "CRP", "RF", "Anti-CCP", "C3", "C4"],
+  "variables_binarias": ["Gender", "HLA-B27", "ANA", "Anti-Ro", "Anti-La", "Anti-dsDNA", "Anti-Sm"],
+  "orden_etiquetas_salida": [
+    "Ankylosing Spondylitis",
+    "Normal",
+    "Psoriatic Arthritis",
+    "Reactive Arthritis",
+    "Rheumatoid Arthritis",
+    "Sjögren's Syndrome",
+    "Systemic Lupus Erythematosus"
+  ]
+}
