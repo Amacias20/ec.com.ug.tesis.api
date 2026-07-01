@@ -41,6 +41,12 @@ def _construir_dataframe(datos: PacienteInput) -> pd.DataFrame:
         fila[col] = datos_dict.get(col)
 
     df = pd.DataFrame([fila], columns=artefactos.variables_requeridas)
+    # Forzar dtype numérico: si una columna llega enteramente en None,
+    # pandas la infiere como dtype "object", y SimpleImputer no reconoce
+    # None (solo np.nan) como valor faltante en columnas object, lo que
+    # rompe la conversión a tensor más adelante. pd.to_numeric normaliza
+    # None -> NaN y garantiza float64 en todas las columnas.
+    df = df.apply(pd.to_numeric, errors="coerce")
     return df
 
 

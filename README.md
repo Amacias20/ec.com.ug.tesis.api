@@ -49,12 +49,33 @@ La documentación Swagger queda disponible en: **http://localhost:8000/docs**
 
 ## Endpoints
 
+Endpoints originales en español (sin prefijo):
+
 | Método | Ruta        | Descripción                                      |
 |--------|-------------|--------------------------------------------------|
 | GET    | `/salud`    | Estado del servicio y verificación del modelo     |
 | GET    | `/esquema`  | Esquema de variables de entrada y enfermedades    |
 | POST   | `/predecir` | Predicción multietiqueta completa                 |
 | POST   | `/explicar` | Explicación LIME *(estructura lista, pendiente)*  |
+
+Endpoints en inglés bajo `/api/v1`, consumidos por el frontend React:
+
+| Método | Ruta                                | Descripción                                              |
+|--------|-------------------------------------|-----------------------------------------------------------|
+| GET    | `/health`                           | Alias en inglés de `/salud`                               |
+| POST   | `/api/v1/predict`                   | Predicción multietiqueta (payload en inglés)               |
+| POST   | `/api/v1/predict-with-explanation`  | Predicción + explicación LIME en una sola llamada           |
+| POST   | `/api/v1/explain`                   | Explicación LIME real de un paciente                        |
+| GET    | `/api/v1/model-info`                | Metadatos del modelo (sin métricas: no hay modelo entrenado real ni test set) |
+| GET    | `/api/v1/feature-importance`        | Importancia global de variables por enfermedad (LIME, cacheada) |
+| POST   | `/api/v1/datasets/upload`           | Sube un dataset (.csv/.xlsx/.xls), persiste metadata en sqlite |
+| GET    | `/api/v1/datasets/history`          | Historial de datasets subidos                               |
+| DELETE | `/api/v1/datasets/{id}`             | Elimina un dataset (archivo + registro)                     |
+| GET    | `/api/v1/dashboard/summary`         | Totales de predicciones realizadas                          |
+| GET    | `/api/v1/dashboard/disease-distribution` | Frecuencia de cada enfermedad como diagnóstico principal |
+| GET    | `/api/v1/dashboard/timeline`        | Predicciones por día                                        |
+
+**Nota sobre explicabilidad**: no existe la librería `shap` instalada ni un dataset de entrenamiento real (los artefactos en `artifacts/` son sintéticos, ver `generate_test_artifacts.py`). El campo `shap_values` de `/api/v1/explain` y `/api/v1/predict-with-explanation` reutiliza los pesos calculados por LIME como aproximación — no son valores SHAP reales. Los datos de `/api/v1/dashboard/*` y `/api/v1/datasets/*` se persisten en `data/app.db` (sqlite) y `data/datasets/` (carpeta ignorada por git).
 
 ---
 

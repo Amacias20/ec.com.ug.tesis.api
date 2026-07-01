@@ -26,6 +26,12 @@ def salud():
     )
 
 
+@router.get("/health", summary="Estado del servicio (alias en inglés de /salud)")
+def health():
+    """Alias en inglés de /salud, usado por el frontend (healthCheck())."""
+    return {"status": "ok", "model_loaded": artefactos.cargado}
+
+
 @router.get("/esquema", response_model=EsquemaResponse, summary="Esquema de entrada")
 def esquema():
     """Devuelve el esquema de variables de entrada y las enfermedades de salida

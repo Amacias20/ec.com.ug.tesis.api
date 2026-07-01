@@ -13,8 +13,9 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.db import init_db
 from app.model import artefactos
-from app.routers import health, predict
+from app.routers import api_v1, dashboard_v1, datasets_v1, health, predict
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -40,6 +41,7 @@ async def lifespan(app: FastAPI):
     except RuntimeError as e:
         logger.critical("❌ Error fatal al cargar artefactos: %s", e)
         raise
+    init_db()
     logger.info("✅ Servidor listo para recibir peticiones.")
     yield
     logger.info("🛑 Servidor apagándose.")
@@ -80,3 +82,6 @@ app.add_middleware(
 # ---------------------------------------------------------------------------
 app.include_router(health.router)
 app.include_router(predict.router)
+app.include_router(api_v1.router)
+app.include_router(datasets_v1.router)
+app.include_router(dashboard_v1.router)
