@@ -34,6 +34,10 @@ class Patient(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     
+    # Personal Info
+    first_name = Column(String(100), nullable=False)
+    last_name = Column(String(100), nullable=False)
+
     # Clinical features — continuous
     age = Column(Float, nullable=False)
     gender = Column(Integer, nullable=False, comment="1=Male, 0=Female")

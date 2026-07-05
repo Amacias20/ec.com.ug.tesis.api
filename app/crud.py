@@ -31,6 +31,8 @@ def create_patient_with_predictions(
     data = patient_input.model_dump()
 
     patient = Patient(
+        first_name=data["first_name"],
+        last_name=data["last_name"],
         age=data["age"],
         gender=1 if data["gender"] == "Male" else 0,
         esr=data.get("esr"),

@@ -21,6 +21,8 @@ class PatientInput(BaseModel):
     """Clinical data of a patient. All fields are optional because the
     preprocessor imputes missing values."""
 
+    first_name: str = Field(..., description="Patient's first name")
+    last_name: str = Field(..., description="Patient's last name")
     age: float = Field(..., description="Patient's age")
     gender: Literal["Male", "Female"] = Field(..., description="Patient's gender")
     esr: Optional[float] = Field(None, description="Erythrocyte sedimentation rate (mm/h)")
@@ -101,6 +103,8 @@ class PredictionRecordOut(BaseModel):
 class PatientRecord(BaseModel):
     """Lightweight patient row for list views."""
     id: UUID
+    first_name: str
+    last_name: str
     age: float
     gender: int
     primary_diagnosis: Optional[str] = None
