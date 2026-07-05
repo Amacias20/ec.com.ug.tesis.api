@@ -1,32 +1,54 @@
-from typing import List, Optional
-from pydantic import BaseModel
-from fastapi import APIRouter
+"""
+patients.py — Patient history CRUD, under /api/v1/patients.
 
-router = APIRouter(prefix="/pacientes", tags=["Pacientes"])
+Provides paginated listing, detail view, and deletion of patient
+evaluations stored in PostgreSQL.
+"""
 
-class PacienteResponse(BaseModel):
-    id: int
-    nombre: str
-    edad: int
-    genero: int
-    fecha_registro: str
+import math
+from uuid import UUID
 
-# Mock data
-PACIENTES = [
-    {"id": 1, "nombre": "Juan Perez", "edad": 45, "genero": 1, "fecha_registro": "2023-01-15"},
-    {"id": 2, "nombre": "Maria Lopez", "edad": 38, "genero": 0, "fecha_registro": "2023-02-20"},
-    {"id": 3, "nombre": "Carlos Sanchez", "edad": 50, "genero": 1, "fecha_registro": "2023-03-10"},
-]
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.orm import Session
 
-@router.get("", response_model=List[PacienteResponse], summary="Obtener lista de pacientes")
-def listar_pacientes():
-    """Devuelve una lista de pacientes (mocked)."""
-    return PACIENTES
+from app import crud
+from app.database import get_db
+from app.schemas import PaginatedPatients, PatientDetail, PatientRecord
 
-@router.get("/{paciente_id}", response_model=Optional[PacienteResponse], summary="Obtener paciente por ID")
-def obtener_paciente(paciente_id: int):
-    """Devuelve los detalles de un paciente específico."""
-    for p in PACIENTES:
-        if p["id"] == paciente_id:
-            return p
-    return None
+router = APIRouter(prefix="/api/v1/patients", tags=["Patients"])
+
+
+@router.get("", response_model=PaginatedPatients, summary="Paginated patient history")
+def list_patients(
+    page: int = Query(1, ge=1, description="Page number"),
+    size: int = Query(20, ge=1, le=100, description="Items per page"),
+    db: Session = Depends(get_db),
+):
+    """Returns a paginated list of patient evaluations, most recent first."""
+    skip = (page - 1) * size
+    patients, total = crud.get_patients(db, skip=skip, limit=size)
+    return PaginatedPatients(
+        items=[PatientRecord.model_validate(p) for p in patients],
+        total=total,
+        page=page,
+        size=size,
+        pages=math.ceil(total / size) if total > 0 else 0,
+    )
+
+
+@router.get("/{patient_id}", response_model=PatientDetail, summary="Patient detail with predictions")
+def get_patient(patient_id: UUID, db: Session = Depends(get_db)):
+    """Returns a single patient with all clinical features and prediction records."""
+    patient = crud.get_patient(db, patient_id)
+    if patient is None:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    return PatientDetail.model_validate(patient)
+
+
+@router.delete("/{patient_id}", summary="Delete a patient record")
+def delete_patient(patient_id: UUID, db: Session = Depends(get_db)):
+    """Deletes a patient and cascades to all prediction records."""
+    deleted = crud.delete_patient(db, patient_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    return {"message": "Patient deleted successfully"}

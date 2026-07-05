@@ -1,23 +1,23 @@
 """
-lime_engine.py — Explicabilidad real con LIME (lime.lime_tabular).
+lime_engine.py — Real explainability with LIME (lime.lime_tabular).
 
-Sustituye al stub de app.inference.explicar() sin modificar ese archivo:
-los routers de /api/v1 llaman directamente a explain_patient() de aquí.
+Substitutes the stub app.inference.explain() without modifying it:
+the /api/v1 routers call explain_patient() directly from here.
 
-Se construye el explainer sobre las 14 variables CLÍNICAS crudas (sin
-transformar), con una función de predicción que aplica internamente
-preprocessor.transform() + modelo + sigmoid. Así las explicaciones salen
-en términos de las variables que el frontend conoce (age, esr, crp, ...),
-no del espacio interno escalado.
+The explainer is built on the 14 raw CLINICAL variables (untransformed),
+with a prediction function that internally applies
+preprocessor.transform() + model + sigmoid. This way the explanations come out
+in terms of the variables the frontend knows (age, esr, crp, ...),
+not the internally scaled space.
 
-Nota importante: no existe un dataset real de entrenamiento en este
-proyecto (los artefactos son sintéticos, ver generate_test_artifacts.py),
-así que el "fondo" que LIME necesita para perturbar muestras se genera
-sintéticamente a partir de las estadísticas ya guardadas en el
-preprocessor (medias/escalas del StandardScaler). Por la misma razón no
-hay librería `shap` instalada: el campo `shap_values` del contrato del
-frontend se rellena reutilizando los mismos pesos de LIME como
-aproximación, dejado explícito aquí y en la respuesta.
+Important note: there is no real training dataset in this
+project (the artifacts are synthetic, see generate_test_artifacts.py),
+so the "background" that LIME needs to perturb samples is generated
+synthetically from the statistics already saved in the
+preprocessor (means/scales of the StandardScaler). For the same reason there is
+no `shap` library installed: the `shap_values` field of the frontend contract
+is populated by reusing the same LIME weights as an
+approximation, left explicit here and in the response.
 """
 
 import logging
@@ -27,9 +27,9 @@ import numpy as np
 import pandas as pd
 from lime.lime_tabular import LimeTabularExplainer
 
-from app.inference import _construir_dataframe, predecir
-from app.model import artefactos
-from app.schemas import PacienteInput
+from app.inference import _build_dataframe, predict
+from app.model import artifacts
+from app.schemas import PatientInput
 
 logger = logging.getLogger(__name__)
 
@@ -41,40 +41,40 @@ _background_cache: Optional[pd.DataFrame] = None
 _explainer_cache: Optional[LimeTabularExplainer] = None
 
 
-def _stats_continuas() -> Dict[str, Tuple[float, float]]:
-    """Intenta leer (media, desviación) reales del StandardScaler ya
-    ajustado dentro del preprocessor. Si la estructura no coincide (p.ej.
-    otro nombre de transformer), usa valores por defecto razonables."""
+def _continuous_stats() -> Dict[str, Tuple[float, float]]:
+    """Tries to read real (mean, std) from the StandardScaler already
+    fitted inside the preprocessor. If the structure doesn't match (e.g.
+    another transformer name), it uses reasonable default values."""
     stats: Dict[str, Tuple[float, float]] = {}
-    variables = artefactos.variables_continuas or []
+    variables = artifacts.continuous_features or []
     try:
-        transformador = artefactos.preprocessor.named_transformers_["continuas"]
-        scaler = transformador.named_steps["scaler"]
-        for nombre, media, escala in zip(variables, scaler.mean_, scaler.scale_):
-            stats[nombre] = (float(media), float(escala) if escala else _DEFAULT_STD)
+        transformer = artifacts.preprocessor.named_transformers_["continuas"]
+        scaler = transformer.named_steps["scaler"]
+        for name, mean, scale in zip(variables, scaler.mean_, scaler.scale_):
+            stats[name] = (float(mean), float(scale) if scale else _DEFAULT_STD)
     except Exception:
-        logger.warning("No se pudieron leer estadísticas del preprocessor; usando valores por defecto.")
-    for nombre in variables:
-        stats.setdefault(nombre, (_DEFAULT_MEAN, _DEFAULT_STD))
+        logger.warning("Could not read statistics from preprocessor; using default values.")
+    for name in variables:
+        stats.setdefault(name, (_DEFAULT_MEAN, _DEFAULT_STD))
     return stats
 
 
 def _build_background_dataframe(n: int = 300) -> pd.DataFrame:
-    """Genera n muestras sintéticas plausibles en el espacio crudo de las
-    14 variables, en el orden de artefactos.variables_requeridas."""
+    """Generates n plausible synthetic samples in the raw space of the
+    14 variables, in the order of artifacts.required_features."""
     rng = np.random.default_rng(42)
-    stats = _stats_continuas()
-    continuas = set(artefactos.variables_continuas or [])
+    stats = _continuous_stats()
+    continuous = set(artifacts.continuous_features or [])
 
     data = {}
-    for col in artefactos.variables_requeridas:
-        if col in continuas:
-            media, desviacion = stats[col]
-            data[col] = rng.normal(media, abs(desviacion) or _DEFAULT_STD, n)
+    for col in artifacts.required_features:
+        if col in continuous:
+            mean, std_dev = stats[col]
+            data[col] = rng.normal(mean, abs(std_dev) or _DEFAULT_STD, n)
         else:
             data[col] = rng.integers(0, 2, n).astype(float)
 
-    return pd.DataFrame(data, columns=artefactos.variables_requeridas)
+    return pd.DataFrame(data, columns=artifacts.required_features)
 
 
 def _get_background() -> pd.DataFrame:
@@ -85,18 +85,18 @@ def _get_background() -> pd.DataFrame:
 
 
 def _predict_fn(raw_rows: np.ndarray) -> np.ndarray:
-    """Función que LIME usa para perturbar muestras: recibe un array 2D en
-    el espacio crudo (columnas = variables_requeridas) y devuelve las 7
-    probabilidades sigmoid independientes por fila."""
+    """Function that LIME uses to perturb samples: receives a 2D array in
+    the raw space (columns = required_features) and returns the 7
+    independent sigmoid probabilities per row."""
     import torch
 
-    df = pd.DataFrame(raw_rows, columns=artefactos.variables_requeridas)
-    X = artefactos.preprocessor.transform(df)
+    df = pd.DataFrame(raw_rows, columns=artifacts.required_features)
+    X = artifacts.preprocessor.transform(df)
     if hasattr(X, "toarray"):
         X = X.toarray()
     tensor = torch.tensor(X, dtype=torch.float32)
     with torch.no_grad():
-        probs = torch.sigmoid(artefactos.modelo(tensor)).cpu().numpy()
+        probs = torch.sigmoid(artifacts.model(tensor)).cpu().numpy()
     return probs
 
 
@@ -104,15 +104,15 @@ def _get_explainer() -> LimeTabularExplainer:
     global _explainer_cache
     if _explainer_cache is None:
         background = _get_background()
-        continuas = set(artefactos.variables_continuas or [])
+        continuous = set(artifacts.continuous_features or [])
         categorical_features = [
-            i for i, col in enumerate(artefactos.variables_requeridas) if col not in continuas
+            i for i, col in enumerate(artifacts.required_features) if col not in continuous
         ]
         _explainer_cache = LimeTabularExplainer(
             training_data=background.values,
-            feature_names=artefactos.variables_requeridas,
+            feature_names=artifacts.required_features,
             categorical_features=categorical_features,
-            class_names=artefactos.nombres_enfermedades,
+            class_names=artifacts.disease_names,
             discretize_continuous=False,
             mode="classification",
             random_state=42,
@@ -120,55 +120,55 @@ def _get_explainer() -> LimeTabularExplainer:
     return _explainer_cache
 
 
-def _explicar_una_enfermedad(fila_cruda: np.ndarray, idx_enfermedad: int) -> List[Tuple[str, float]]:
+def _explain_one_disease(raw_row: np.ndarray, disease_idx: int) -> List[Tuple[str, float]]:
     explainer = _get_explainer()
-    explicacion = explainer.explain_instance(
-        fila_cruda,
+    explanation = explainer.explain_instance(
+        raw_row,
         _predict_fn,
-        labels=[idx_enfermedad],
-        num_features=len(artefactos.variables_requeridas),
+        labels=[disease_idx],
+        num_features=len(artifacts.required_features),
     )
-    return explicacion.as_list(label=idx_enfermedad)
+    return explanation.as_list(label=disease_idx)
 
 
-def _rellenar_faltantes(fila_cruda: np.ndarray) -> np.ndarray:
-    """LIME necesita una fila numérica completa (sin NaN) para calcular
-    distancias respecto al fondo sintético. Los campos clínicos que el
-    paciente no proporcionó (NaN, ver inference._construir_dataframe) se
-    rellenan con el promedio del fondo sintético para esa variable —
-    el mismo criterio de imputación que usa el preprocesador del modelo."""
+def _fill_missing(raw_row: np.ndarray) -> np.ndarray:
+    """LIME needs a complete numeric row (without NaN) to calculate
+    distances with respect to the synthetic background. The clinical fields that the
+    patient did not provide (NaN, see inference._build_dataframe) are
+    filled with the average of the synthetic background for that variable —
+    the same imputation criterion used by the model's preprocessor."""
     background = _get_background()
-    medias = background.mean(axis=0).values
-    fila = fila_cruda.astype(float).copy()
-    faltantes = np.isnan(fila)
-    fila[faltantes] = medias[faltantes]
-    return fila
+    means = background.mean(axis=0).values
+    row = raw_row.astype(float).copy()
+    missing = np.isnan(row)
+    row[missing] = means[missing]
+    return row
 
 
-def explain_patient(datos: PacienteInput) -> dict:
-    """Genera explicaciones LIME reales para las enfermedades del perfil
-    compatible de un paciente. Devuelve un dict compatible con el
-    ExplainabilityResponse del frontend."""
-    resultado = predecir(datos)
-    fila_cruda = _rellenar_faltantes(_construir_dataframe(datos).values[0])
+def explain_patient(data: PatientInput) -> dict:
+    """Generates real LIME explanations for the diseases in a patient's
+    compatible profile. Returns a dict compatible with the frontend's
+    ExplainabilityResponse."""
+    result = predict(data)
+    raw_row = _fill_missing(_build_dataframe(data).values[0])
 
-    nombres = artefactos.nombres_enfermedades
+    names = artifacts.disease_names
     lime_explanation: Dict[str, List[Tuple[str, float]]] = {}
     top_positive: Dict[str, List[str]] = {}
     top_negative: Dict[str, List[str]] = {}
     shap_values: Dict[str, Dict[str, float]] = {}
 
-    for compatible in resultado["perfil_compatibles"]:
-        idx = nombres.index(compatible.enfermedad)
-        pares = _explicar_una_enfermedad(fila_cruda, idx)
+    for compatible in result["compatible_profile"]:
+        idx = names.index(compatible["disease"])
+        pairs = _explain_one_disease(raw_row, idx)
 
-        lime_explanation[compatible.enfermedad] = pares
-        shap_values[compatible.enfermedad] = dict(pares)
+        lime_explanation[compatible["disease"]] = pairs
+        shap_values[compatible["disease"]] = dict(pairs)
 
-        positivos = [f for f, peso in pares if peso > 0]
-        negativos = [f for f, peso in pares if peso < 0]
-        top_positive[compatible.enfermedad] = positivos[:_NUM_FEATURES_EXPLAIN]
-        top_negative[compatible.enfermedad] = negativos[:_NUM_FEATURES_EXPLAIN]
+        positives = [f for f, weight in pairs if weight > 0]
+        negatives = [f for f, weight in pairs if weight < 0]
+        top_positive[compatible["disease"]] = positives[:_NUM_FEATURES_EXPLAIN]
+        top_negative[compatible["disease"]] = negatives[:_NUM_FEATURES_EXPLAIN]
 
     return {
         "shap_values": shap_values,

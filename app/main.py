@@ -1,10 +1,11 @@
 """
-main.py — Punto de entrada de la aplicación FastAPI.
+main.py — FastAPI application entry point.
 
-- Carga los artefactos UNA SOLA VEZ al arrancar (lifespan).
-- Habilita CORS para el frontend React (p.ej. localhost:5173).
-- Registra los routers de /salud, /esquema, /predecir y /explicar.
-- Documentación Swagger disponible en /docs.
+- Loads ML artifacts ONCE at startup (lifespan).
+- Creates PostgreSQL tables via SQLAlchemy (code-first).
+- Enables CORS for the React frontend (e.g. localhost:5173).
+- Registers the consolidated API routers.
+- Swagger documentation available at /docs.
 """
 
 import logging
@@ -13,9 +14,12 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.db import init_db
-from app.model import artefactos
-from app.routers import api_v1, dashboard_v1, datasets_v1, health, predict
+from app.database import Base, engine
+from app.model import artifacts
+from app.routers import api, dashboard_v1, patients
+
+# Import models so Base.metadata knows about them
+import app.models  # noqa: F401
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -28,41 +32,45 @@ logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
-# Lifespan: carga de artefactos al iniciar
+# Lifespan: load artifacts + create tables on startup
 # ---------------------------------------------------------------------------
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Carga todos los artefactos (modelo, preprocesador, esquema, etc.)
-    una sola vez al arrancar el servidor. Si falta algún archivo crítico,
-    la aplicación falla con un mensaje explícito en vez de arrancar rota."""
-    logger.info("🚀 Iniciando carga de artefactos…")
+    """Loads all ML artifacts (model, preprocessor, schema, etc.)
+    once when starting the server and ensures PostgreSQL tables exist."""
+    logger.info("🚀 Starting artifacts load…")
     try:
-        artefactos.cargar()
+        artifacts.load()
     except RuntimeError as e:
-        logger.critical("❌ Error fatal al cargar artefactos: %s", e)
+        logger.critical("❌ Fatal error loading artifacts: %s", e)
         raise
-    init_db()
-    logger.info("✅ Servidor listo para recibir peticiones.")
+
+    # Code-first: create tables if they don't exist yet
+    logger.info("🗄️  Ensuring PostgreSQL tables exist…")
+    Base.metadata.create_all(bind=engine)
+    logger.info("✅ Database tables ready.")
+
+    logger.info("✅ Server ready to receive requests.")
     yield
-    logger.info("🛑 Servidor apagándose.")
+    logger.info("🛑 Server shutting down.")
 
 
 # ---------------------------------------------------------------------------
-# Aplicación FastAPI
+# FastAPI Application
 # ---------------------------------------------------------------------------
 app = FastAPI(
-    title="API de Clasificación Multietiqueta — Enfermedades Autoinmunes",
+    title="Multi-label Classification API — Autoimmune Diseases",
     description=(
-        "Sirve un modelo Gated MLP (PyTorch) pre-entrenado para clasificar "
-        "7 enfermedades autoinmunes a partir de 14 variables clínicas. "
-        "Predicción **multietiqueta** con sigmoides independientes."
+        "Serves a pre-trained Gated MLP (PyTorch) model to classify "
+        "7 autoimmune diseases from 14 clinical variables. "
+        "**Multi-label** prediction with independent sigmoids."
     ),
     version="1.0.0",
     lifespan=lifespan,
 )
 
 # ---------------------------------------------------------------------------
-# CORS — permite que el frontend React en otro puerto consuma la API
+# CORS — allows the React frontend on another port to consume the API
 # ---------------------------------------------------------------------------
 app.add_middleware(
     CORSMiddleware,
@@ -80,8 +88,6 @@ app.add_middleware(
 # ---------------------------------------------------------------------------
 # Routers
 # ---------------------------------------------------------------------------
-app.include_router(health.router)
-app.include_router(predict.router)
-app.include_router(api_v1.router)
-app.include_router(datasets_v1.router)
+app.include_router(api.router)
+app.include_router(patients.router)
 app.include_router(dashboard_v1.router)

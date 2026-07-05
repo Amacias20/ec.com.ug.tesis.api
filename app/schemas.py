@@ -1,103 +1,140 @@
 """
-schemas.py — Modelos Pydantic de entrada y salida para la API.
+schemas.py — Pydantic input and output models for the API.
 
-- PacienteInput: 14 variables clínicas (todas opcionales para reflejar la
-  realidad clínica de que no siempre se piden todos los exámenes).
-- PrediccionOutput: resultado completo de la predicción multietiqueta.
+- PatientInput: 14 clinical variables.
+- PredictionResponse: multi-label prediction result.
+- PatientRecord / PatientDetail: history response models.
 """
 
-from typing import List, Optional
+from datetime import datetime
+from typing import List, Optional, Literal
+from uuid import UUID
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
+
+Binary = Literal["Positive", "Negative"]
+
+# ---------------------------------------------------------------------------
+# Input
+# ---------------------------------------------------------------------------
+class PatientInput(BaseModel):
+    """Clinical data of a patient. All fields are optional because the
+    preprocessor imputes missing values."""
+
+    age: float = Field(..., description="Patient's age")
+    gender: Literal["Male", "Female"] = Field(..., description="Patient's gender")
+    esr: Optional[float] = Field(None, description="Erythrocyte sedimentation rate (mm/h)")
+    crp: Optional[float] = Field(None, description="C-reactive protein (mg/L)")
+    rf: Optional[float] = Field(None, description="Rheumatoid factor (IU/mL)")
+    anti_ccp: Optional[float] = Field(None, description="Anti-CCP antibodies")
+    hla_b27: Optional[Binary] = Field(None, description="HLA-B27")
+    ana: Optional[Binary] = Field(None, description="Antinuclear antibodies")
+    anti_ro: Optional[Binary] = Field(None, description="Anti-Ro/SSA")
+    anti_la: Optional[Binary] = Field(None, description="Anti-La/SSB")
+    anti_dsdna: Optional[Binary] = Field(None, description="Anti-dsDNA")
+    anti_sm: Optional[Binary] = Field(None, description="Anti-Sm")
+    c3: Optional[float] = Field(None, description="Complement C3 (g/L)")
+    c4: Optional[float] = Field(None, description="Complement C4 (g/L)")
 
 
 # ---------------------------------------------------------------------------
-# Entrada
+# Output — Prediction
 # ---------------------------------------------------------------------------
-class PacienteInput(BaseModel):
-    """Datos clínicos de un paciente. Todos los campos son opcionales (null
-    permitido) porque el preprocesador imputa valores faltantes."""
-
-    # Variables continuas
-    Age: Optional[float] = Field(None, description="Edad del paciente")
-    ESR: Optional[float] = Field(None, description="Velocidad de sedimentación globular (mm/h)")
-    CRP: Optional[float] = Field(None, description="Proteína C reactiva (mg/L)")
-    RF: Optional[float] = Field(None, description="Factor reumatoide (UI/mL)")
-    Anti_CCP: Optional[float] = Field(None, alias="Anti-CCP", description="Anticuerpos anti-CCP")
-    C3: Optional[float] = Field(None, description="Complemento C3 (g/L)")
-    C4: Optional[float] = Field(None, description="Complemento C4 (g/L)")
-
-    # Variables binarias (0 o 1)
-    Gender: Optional[int] = Field(None, description="Género (0=F, 1=M)")
-    HLA_B27: Optional[int] = Field(None, alias="HLA-B27", description="HLA-B27 (0 o 1)")
-    ANA: Optional[int] = Field(None, description="Anticuerpos antinucleares (0 o 1)")
-    Anti_Ro: Optional[int] = Field(None, alias="Anti-Ro", description="Anti-Ro/SSA (0 o 1)")
-    Anti_La: Optional[int] = Field(None, alias="Anti-La", description="Anti-La/SSB (0 o 1)")
-    Anti_dsDNA: Optional[int] = Field(None, alias="Anti-dsDNA", description="Anti-dsDNA (0 o 1)")
-    Anti_Sm: Optional[int] = Field(None, alias="Anti-Sm", description="Anti-Sm (0 o 1)")
-
-    model_config = {"populate_by_name": True}
-
-    @field_validator(
-        "Gender", "HLA_B27", "ANA", "Anti_Ro", "Anti_La", "Anti_dsDNA", "Anti_Sm",
-        mode="before",
-    )
-    @classmethod
-    def validar_binarios(cls, v, info):
-        if v is None:
-            return v
-        if v not in (0, 1):
-            raise ValueError(
-                f"El campo '{info.field_name}' debe ser 0 o 1, se recibió: {v}"
-            )
-        return v
+class DiagnosisPrediction(BaseModel):
+    disease: str
+    probability: float
+    is_positive: bool
+    threshold_used: float
 
 
-# ---------------------------------------------------------------------------
-# Salida
-# ---------------------------------------------------------------------------
-class EnfermedadProbabilidad(BaseModel):
-    enfermedad: str
-    probabilidad: float
+class PredictionResponse(BaseModel):
+    predictions: List[DiagnosisPrediction]
+    overlap_syndrome_detected: bool
+    missing_features: List[str]
+    model_used: str
 
 
-class PrediccionOutput(BaseModel):
-    diagnostico_principal: str
-    probabilidad_principal: float
-    perfil_compatibles: List[EnfermedadProbabilidad]
-    todas_las_probabilidades: List[EnfermedadProbabilidad]
-    umbral_usado: float
-    advertencia: str
+class ExplainabilityResponse(BaseModel):
+    shap_values: dict = Field(default_factory=dict)
+    lime_explanation: dict = Field(default_factory=dict)
+    top_positive_features: dict = Field(default_factory=dict)
+    top_negative_features: dict = Field(default_factory=dict)
 
 
-class ExplicacionVariable(BaseModel):
-    variable: str
-    peso: float
+class ModelInfoResponse(BaseModel):
+    model_name: str
+    input_dim: int
+    n_labels: int
+    label_names: List[str]
+    feature_names: List[str]
+    thresholds: List[float]
 
 
-class ExplicacionEnfermedad(BaseModel):
-    enfermedad: str
-    a_favor: List[ExplicacionVariable]
-    en_contra: List[ExplicacionVariable]
+class HealthResponse(BaseModel):
+    status: str
+    model_loaded: bool
+    model_version: str
 
 
-class ExplicacionOutput(BaseModel):
-    diagnostico_principal: str
-    explicaciones: List[ExplicacionEnfermedad]
-    advertencia: str
+class SchemaResponse(BaseModel):
+    continuous_features: List[str]
+    binary_features: List[str]
+    required_features: List[str]
+    output_diseases: List[str]
 
 
 # ---------------------------------------------------------------------------
-# Respuestas de /salud y /esquema
+# Output — Patient History (PostgreSQL)
 # ---------------------------------------------------------------------------
-class SaludResponse(BaseModel):
-    estado: str
-    modelo_cargado: bool
-    version_modelo: str
+class PredictionRecordOut(BaseModel):
+    """One disease prediction row."""
+    id: UUID
+    disease_name: str
+    probability: float
+    is_positive: bool
+    threshold_used: float
+    is_primary: bool
+
+    model_config = {"from_attributes": True}
 
 
-class EsquemaResponse(BaseModel):
-    variables_continuas: List[str]
-    variables_binarias: List[str]
-    variables_requeridas: List[str]
-    enfermedades_salida: List[str]
+class PatientRecord(BaseModel):
+    """Lightweight patient row for list views."""
+    id: UUID
+    age: float
+    gender: int
+    primary_diagnosis: Optional[str] = None
+    primary_probability: Optional[float] = None
+    overlap_syndrome_detected: bool = False
+    model_used: Optional[str] = None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class PatientDetail(PatientRecord):
+    """Full patient with all clinical features + predictions."""
+    esr: Optional[float] = None
+    crp: Optional[float] = None
+    rf: Optional[float] = None
+    anti_ccp: Optional[float] = None
+    hla_b27: Optional[int] = None
+    ana: Optional[int] = None
+    anti_ro: Optional[int] = None
+    anti_la: Optional[int] = None
+    anti_dsdna: Optional[int] = None
+    anti_sm: Optional[int] = None
+    c3: Optional[float] = None
+    c4: Optional[float] = None
+    predictions: List[PredictionRecordOut] = []
+
+    model_config = {"from_attributes": True}
+
+
+class PaginatedPatients(BaseModel):
+    """Paginated response for patient history."""
+    items: List[PatientRecord]
+    total: int
+    page: int
+    size: int
+    pages: int

@@ -1,37 +1,38 @@
 """
-dashboard_v1.py — Analítica de predicciones, bajo /api/v1/dashboard.
+dashboard.py — Prediction analytics, under /api/v1/dashboard.
 
-Endpoints nuevos (sin equivalente previo en el frontend): alimentan la
-página Dashboard.tsx con datos agregados del historial de predicciones
-reales guardado en sqlite (ver app.db).
+Endpoints feeding the Dashboard.tsx page with aggregated data
+from the patient predictions history stored in PostgreSQL.
 """
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 
-from app import db
-from app.model import artefactos
+from app import crud
+from app.database import get_db
+from app.model import artifacts
 
 router = APIRouter(prefix="/api/v1/dashboard", tags=["Dashboard"])
 
 
-@router.get("/summary", summary="Totales de predicciones realizadas")
-def summary():
-    resumen = db.dashboard_summary()
-    modelo_usado = ""
-    if artefactos.config:
-        modelo_usado = str(artefactos.config.get("nombre_modelo", "desconocido"))
+@router.get("/summary", summary="Total predictions made")
+def summary(db: Session = Depends(get_db)):
+    resume = crud.dashboard_summary(db)
+    model_used = ""
+    if artifacts.config:
+        model_used = str(artifacts.config.get("nombre_modelo", "unknown"))
     return {
-        **resumen,
-        "threshold_used": artefactos.umbral,
-        "model_used": modelo_usado,
+        **resume,
+        "threshold_used": artifacts.threshold,
+        "model_used": model_used,
     }
 
 
-@router.get("/disease-distribution", summary="Frecuencia de cada enfermedad como diagnóstico principal")
-def disease_distribution():
-    return db.dashboard_disease_distribution()
+@router.get("/disease-distribution", summary="Frequency of each disease as primary diagnosis")
+def disease_distribution(db: Session = Depends(get_db)):
+    return crud.dashboard_disease_distribution(db)
 
 
-@router.get("/timeline", summary="Predicciones por día")
-def timeline():
-    return db.dashboard_timeline()
+@router.get("/timeline", summary="Predictions per day")
+def timeline(db: Session = Depends(get_db)):
+    return crud.dashboard_timeline(db)
