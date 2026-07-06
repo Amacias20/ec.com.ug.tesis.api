@@ -122,7 +122,8 @@ def predict(data: PatientInput) -> dict:
     probs = [round(float(p), 4) for p in probs]
 
     names = artifacts.disease_names
-    threshold = artifacts.threshold
+    default_threshold = artifacts.threshold
+    optimal_thresholds = artifacts.decision_rule.get("umbrales_optimos", {})
 
     # 7. Primary diagnosis = argmax
     primary_idx = int(np.argmax(probs))
@@ -132,11 +133,12 @@ def predict(data: PatientInput) -> dict:
     # 8. Build predictions list matching DiagnosisPrediction schema
     predictions = []
     for n, p in zip(names, probs):
+        threshold = float(optimal_thresholds.get(n, default_threshold))
         predictions.append({
             "disease": n,
             "probability": float(p),
             "is_positive": bool(p >= threshold),
-            "threshold_used": float(threshold)
+            "threshold_used": threshold
         })
     
     # Sort them by probability
