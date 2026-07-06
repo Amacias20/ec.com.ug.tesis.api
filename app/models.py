@@ -59,6 +59,7 @@ class Patient(Base):
     # Metadata
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
 
+
     # Aggregated result fields (denormalized for quick queries)
     primary_diagnosis = Column(String(100), nullable=True)
     primary_probability = Column(Float, nullable=True)
@@ -98,3 +99,13 @@ class PredictionRecord(Base):
 
     def __repr__(self) -> str:
         return f"<PredictionRecord(disease={self.disease_name}, p={self.probability:.3f})>"
+
+class DiseaseThreshold(Base):
+    """Stores optimal classification thresholds per disease, editable via UI."""
+
+    __tablename__ = "disease_thresholds"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    disease_name = Column(String(100), unique=True, nullable=False)
+    threshold_value = Column(Float, nullable=False, default=0.5)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)

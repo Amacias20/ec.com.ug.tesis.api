@@ -11,14 +11,16 @@ Exact sequence:
 """
 
 import logging
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
 import torch
+from sqlalchemy.orm import Session
 
 from app.model import artifacts
 from app.schemas import PatientInput
+from app import crud
 
 logger = logging.getLogger(__name__)
 
@@ -106,7 +108,7 @@ def missing_features(data: PatientInput) -> List[str]:
     return [field for field in OPTIONAL_FEATURES if data_dict.get(field) is None]
 
 
-def predict(data: PatientInput) -> dict:
+def predict(data: PatientInput, db: Session = None) -> dict:
     """Complete prediction pipeline. Returns a dict ready to serialize."""
     # 1-2. Build DataFrame
     df = _build_dataframe(data)
@@ -123,7 +125,18 @@ def predict(data: PatientInput) -> dict:
 
     names = artifacts.disease_names
     default_threshold = artifacts.threshold
-    optimal_thresholds = artifacts.decision_rule.get("umbrales_optimos", {})
+    
+    # Fallback to JSON thresholds
+    optimal_thresholds = artifacts.decision_rule.get("umbrales_optimos", {}).copy()
+    
+    # Override with DB thresholds if available
+    if db:
+        try:
+            db_thresholds = crud.get_thresholds_dict(db)
+            for k, v in db_thresholds.items():
+                optimal_thresholds[k] = v
+        except Exception as e:
+            logger.warning("Error fetching thresholds from DB, falling back to JSON: %s", e)
 
     # 7. Primary diagnosis = argmax
     primary_idx = int(np.argmax(probs))
@@ -161,14 +174,14 @@ def predict(data: PatientInput) -> dict:
     }
 
 
-def explain(data: PatientInput) -> dict:
+def explain(data: PatientInput, db: Session = None) -> dict:
     """Generates LIME explanations for the diseases in the compatible profile.
     
     TODO: Integrate lime.lime_tabular.LimeTabularExplainer.
     Currently returns the response structure with a placeholder.
     """
     # First we get the normal prediction to know the profile
-    prediction_result = predict(data)
+    prediction_result = predict(data, db)
 
     explanations = []
     for disease_prob in prediction_result["compatible_profile"]:

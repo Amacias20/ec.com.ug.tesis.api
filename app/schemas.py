@@ -7,7 +7,7 @@ schemas.py — Pydantic input and output models for the API.
 """
 
 from datetime import datetime
-from typing import List, Optional, Literal
+from typing import List, Optional, Literal, Dict
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -96,6 +96,18 @@ class PredictionRecordOut(BaseModel):
     is_positive: bool
     threshold_used: float
     is_primary: bool
+
+    model_config = {"from_attributes": True}
+
+
+class ThresholdsUpdate(BaseModel):
+    """Payload to update optimal thresholds from the frontend."""
+    thresholds: Dict[str, float] = Field(..., description="Map of disease_name -> optimal threshold value")
+
+
+class ThresholdsResponse(BaseModel):
+    """Payload returning the optimal thresholds."""
+    thresholds: Dict[str, float]
 
     model_config = {"from_attributes": True}
 

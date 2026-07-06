@@ -7,10 +7,10 @@ All functions receive an active SQLAlchemy Session from the FastAPI dependency.
 from typing import Optional
 from uuid import UUID
 
-from sqlalchemy import func, cast, Date
+from sqlalchemy import func, cast, Date, desc
 from sqlalchemy.orm import Session
 
-from app.models import Patient, PredictionRecord
+from app.models import Patient, PredictionRecord, DiseaseThreshold
 from app.schemas import PatientInput
 
 
@@ -154,3 +154,20 @@ def dashboard_timeline(db: Session) -> list[dict]:
         .all()
     )
     return [{"date": str(row.day), "count": row.total} for row in rows]
+
+
+def get_thresholds_dict(db: Session) -> dict:
+    """Returns a dictionary of disease_name -> threshold_value from DB."""
+    records = db.query(DiseaseThreshold).all()
+    return {r.disease_name: r.threshold_value for r in records}
+
+def upsert_thresholds(db: Session, thresholds: dict) -> None:
+    """Inserts or updates multiple thresholds."""
+    for disease_name, val in thresholds.items():
+        existing = db.query(DiseaseThreshold).filter(DiseaseThreshold.disease_name == disease_name).first()
+        if existing:
+            existing.threshold_value = val
+        else:
+            new_record = DiseaseThreshold(disease_name=disease_name, threshold_value=val)
+            db.add(new_record)
+    db.commit()

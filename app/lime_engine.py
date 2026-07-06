@@ -21,6 +21,7 @@ approximation, left explicit here and in the response.
 """
 
 import logging
+import warnings
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
@@ -103,6 +104,12 @@ def _predict_fn(raw_rows: np.ndarray) -> np.ndarray:
 def _get_explainer() -> LimeTabularExplainer:
     global _explainer_cache
     if _explainer_cache is None:
+        warnings.filterwarnings(
+            "ignore",
+            message="Prediction probabilties do not sum to 1",
+            category=UserWarning,
+            module="lime.lime_tabular"
+        )
         background = _get_background()
         continuous = set(artifacts.continuous_features or [])
         categorical_features = [
@@ -145,12 +152,14 @@ def _fill_missing(raw_row: np.ndarray) -> np.ndarray:
     return row
 
 
-def explain_patient(data: PatientInput) -> dict:
+from sqlalchemy.orm import Session
+
+def explain_patient(patient: PatientInput, db: Session = None) -> dict:
     """Generates real LIME explanations for the diseases in a patient's
     compatible profile. Returns a dict compatible with the frontend's
     ExplainabilityResponse."""
-    result = predict(data)
-    raw_row = _fill_missing(_build_dataframe(data).values[0])
+    result = predict(patient, db)
+    raw_row = _fill_missing(_build_dataframe(patient).values[0])
 
     names = artifacts.disease_names
     lime_explanation: Dict[str, List[Tuple[str, float]]] = {}
