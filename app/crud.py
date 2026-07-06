@@ -29,6 +29,10 @@ def create_patient_with_predictions(
     """Persists a patient and all 7 disease prediction records in one transaction."""
 
     data = patient_input.model_dump()
+    
+    # Compute primary diagnosis
+    predictions_list = prediction_result.get("predictions", [])
+    primary_pred = max(predictions_list, key=lambda p: p["probability"]) if predictions_list else None
 
     patient = Patient(
         first_name=data["first_name"],
@@ -48,26 +52,23 @@ def create_patient_with_predictions(
         c3=data.get("c3"),
         c4=data.get("c4"),
         # Denormalized summary
-        primary_diagnosis=prediction_result["primary_diagnosis"],
-        primary_probability=prediction_result["primary_probability"],
-        overlap_syndrome_detected=prediction_result["overlap_syndrome_detected"],
+        primary_diagnosis=primary_pred["disease"] if primary_pred else None,
+        primary_probability=primary_pred["probability"] if primary_pred else None,
+        overlap_syndrome_detected=prediction_result.get("overlap_syndrome_detected", False),
         model_used=prediction_result.get("model_used", "unknown"),
     )
 
     db.add(patient)
     db.flush()  # get patient.id without committing
 
-    threshold = prediction_result["threshold_used"]
-    primary = prediction_result["primary_diagnosis"]
-
-    for item in prediction_result["all_probabilities"]:
+    for item in predictions_list:
         record = PredictionRecord(
             patient_id=patient.id,
             disease_name=item["disease"],
             probability=item["probability"],
-            is_positive=item["probability"] >= threshold,
-            threshold_used=threshold,
-            is_primary=(item["disease"] == primary),
+            is_positive=item["is_positive"],
+            threshold_used=item["threshold_used"],
+            is_primary=(primary_pred is not None and item["disease"] == primary_pred["disease"]),
         )
         db.add(record)
 

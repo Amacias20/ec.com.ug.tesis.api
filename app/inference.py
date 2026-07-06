@@ -129,27 +129,22 @@ def predict(data: PatientInput) -> dict:
     primary_diagnosis = names[primary_idx]
     primary_prob = probs[primary_idx]
 
-    # 8. Compatible profile (>= threshold + always the primary)
-    compatible_diseases = []
-    for i, (name, p) in enumerate(zip(names, probs)):
-        if p >= threshold or i == primary_idx:
-            compatible_diseases.append({"disease": name, "probability": p})
-
-    # Sort compatibles from highest to lowest probability
-    compatible_diseases.sort(key=lambda x: x["probability"], reverse=True)
-
-    # 9. All probabilities sorted from highest to lowest
-    all_probs = [
-        {"disease": n, "probability": p}
-        for n, p in zip(names, probs)
-    ]
-    all_probs.sort(key=lambda x: x["probability"], reverse=True)
+    # 8. Build predictions list matching DiagnosisPrediction schema
+    predictions = []
+    for n, p in zip(names, probs):
+        predictions.append({
+            "disease": n,
+            "probability": float(p),
+            "is_positive": bool(p >= threshold),
+            "threshold_used": float(threshold)
+        })
     
-    # Overlap syndrome detected?
-    compatibles_without_normal = [
-        c for c in compatible_diseases if c["disease"] != "Normal"
-    ]
-    overlap_syndrome_detected = len(compatibles_without_normal) > 1
+    # Sort them by probability
+    predictions.sort(key=lambda x: x["probability"], reverse=True)
+
+    # Overlap syndrome detected? (Multiple positive diseases excluding Normal)
+    positives = [p for p in predictions if p["is_positive"] and p["disease"] != "Normal"]
+    overlap_syndrome_detected = len(positives) > 1
 
     # Model name
     model_used = "unknown"
@@ -157,15 +152,10 @@ def predict(data: PatientInput) -> dict:
         model_used = str(artifacts.config.get("nombre_modelo", "unknown"))
 
     return {
-        "primary_diagnosis": primary_diagnosis,
-        "primary_probability": primary_prob,
-        "compatible_profile": compatible_diseases,
-        "all_probabilities": all_probs,
+        "predictions": predictions,
         "overlap_syndrome_detected": overlap_syndrome_detected,
-        "threshold_used": threshold,
         "missing_features": missing_features(data),
         "model_used": model_used,
-        "warning": WARNING,
     }
 
 
