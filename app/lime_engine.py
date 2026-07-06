@@ -167,7 +167,9 @@ def explain_patient(patient: PatientInput, db: Session = None) -> dict:
     top_negative: Dict[str, List[str]] = {}
     shap_values: Dict[str, Dict[str, float]] = {}
 
-    for compatible in result["compatible_profile"]:
+    for compatible in result["predictions"]:
+        if not compatible.get("is_positive"):
+            continue
         idx = names.index(compatible["disease"])
         pairs = _explain_one_disease(raw_row, idx)
 
