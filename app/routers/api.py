@@ -55,7 +55,12 @@ def explain_endpoint(patient: PatientInput, db: Session = Depends(get_db)):
 def model_info(db: Session = Depends(get_db)):
     model_name = "unknown"
     if artifacts.config:
-        model_name = str(artifacts.config.get("nombre_modelo", "unknown"))
+        model_name = str(
+            artifacts.config.get("nombre_seleccion")
+            or artifacts.config.get("nombre_modelo")
+            or artifacts.config.get("arquitectura")
+            or "unknown"
+        )
 
     n_labels = len(artifacts.disease_names or [])
     
@@ -83,13 +88,18 @@ def feature_importance_endpoint():
 @router.get("/health", response_model=HealthResponse, summary="Service health status")
 def health():
     """Verifies that the service is active and the model was loaded correctly."""
-    version = ""
+    version = "unknown"
     if artifacts.config:
-        version = artifacts.config.get("nombre_modelo", artifacts.config.get("nombre", "unknown"))
+        version = str(
+            artifacts.config.get("nombre_seleccion")
+            or artifacts.config.get("nombre_modelo")
+            or artifacts.config.get("arquitectura")
+            or "unknown"
+        )
     return HealthResponse(
         status="ok",
         model_loaded=artifacts.loaded,
-        model_version=str(version),
+        model_version=version,
     )
 
 
