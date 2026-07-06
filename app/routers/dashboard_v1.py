@@ -18,9 +18,14 @@ router = APIRouter(prefix="/api/v1/dashboard", tags=["Dashboard"])
 @router.get("/summary", summary="Total predictions made")
 def summary(db: Session = Depends(get_db)):
     resume = crud.dashboard_summary(db)
-    model_used = ""
+    model_used = "unknown"
     if artifacts.config:
-        model_used = str(artifacts.config.get("nombre_modelo", "unknown"))
+        model_used = str(
+            artifacts.config.get("nombre_seleccion")
+            or artifacts.config.get("nombre_modelo")
+            or artifacts.config.get("arquitectura")
+            or "unknown"
+        )
     return {
         **resume,
         "threshold_used": artifacts.threshold,
