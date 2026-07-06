@@ -154,8 +154,8 @@ def predict(data: PatientInput, db: Session = None) -> dict:
             "threshold_used": threshold
         })
     
-    # Sort them by probability
-    predictions.sort(key=lambda x: x["probability"], reverse=True)
+    # Sort them primarily by positive status, secondarily by probability
+    predictions.sort(key=lambda x: (x["is_positive"], x["probability"]), reverse=True)
 
     # Overlap syndrome detected? (Multiple positive diseases excluding Normal)
     positives = [p for p in predictions if p["is_positive"] and p["disease"] != "Normal"]
