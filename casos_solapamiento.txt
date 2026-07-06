@@ -1,0 +1,234 @@
+================================================================================
+   CASOS DE PRUEBA CON SOLAPAMIENTO (Umbral = 0.50)
+   Modelo: Gated MLP - Red Autoinmune Multietiqueta
+================================================================================
+
+Total de casos: 14
+
+------------------------------------------------------------
+CASO #1 (Femenino)
+------------------------------------------------------------
+  Edad: 40
+  Genero: Femenino
+  ESR: 30   CRP: 5
+  RF: 80   Anti-CCP: 30
+  HLA-B27: Negativo   ANA: Positivo
+  Anti-Ro: Negativo   Anti-La: Negativo
+  Anti-dsDNA: Positivo   Anti-Sm: Negativo
+  C3: 80   C4: 20
+
+  RESULTADO ESPERADO:
+    -> Rheumatoid Arthritis: 96.5% [POSITIVO]
+    -> Systemic Lupus Erythematosus: 94.4% [POSITIVO]
+
+------------------------------------------------------------
+CASO #2 (Femenino)
+------------------------------------------------------------
+  Edad: 35
+  Genero: Femenino
+  ESR: 30   CRP: 5
+  RF: 80   Anti-CCP: 30
+  HLA-B27: Negativo   ANA: Positivo
+  Anti-Ro: Positivo   Anti-La: Negativo
+  Anti-dsDNA: Positivo   Anti-Sm: Negativo
+  C3: 80   C4: 20
+
+  RESULTADO ESPERADO:
+    -> Rheumatoid Arthritis: 97.1% [POSITIVO]
+    -> Systemic Lupus Erythematosus: 75.0% [POSITIVO]
+
+------------------------------------------------------------
+CASO #3 (Femenino)
+------------------------------------------------------------
+  Edad: 45
+  Genero: Femenino
+  ESR: 30   CRP: 5
+  RF: 80   Anti-CCP: 30
+  HLA-B27: Negativo   ANA: Positivo
+  Anti-Ro: Negativo   Anti-La: Positivo
+  Anti-dsDNA: Positivo   Anti-Sm: Negativo
+  C3: 80   C4: 20
+
+  RESULTADO ESPERADO:
+    -> Rheumatoid Arthritis: 97.0% [POSITIVO]
+    -> Systemic Lupus Erythematosus: 91.3% [POSITIVO]
+
+------------------------------------------------------------
+CASO #4 (Femenino)
+------------------------------------------------------------
+  Edad: 50
+  Genero: Femenino
+  ESR: 30   CRP: 5
+  RF: 80   Anti-CCP: 30
+  HLA-B27: Negativo   ANA: Positivo
+  Anti-Ro: Negativo   Anti-La: Negativo
+  Anti-dsDNA: Positivo   Anti-Sm: Positivo
+  C3: 80   C4: 20
+
+  RESULTADO ESPERADO:
+    -> Systemic Lupus Erythematosus: 99.0% [POSITIVO]
+    -> Rheumatoid Arthritis: 92.7% [POSITIVO]
+
+------------------------------------------------------------
+CASO #5 (Femenino)
+------------------------------------------------------------
+  Edad: 30
+  Genero: Femenino
+  ESR: 30   CRP: 5
+  RF: 80   Anti-CCP: 30
+  HLA-B27: Negativo   ANA: Positivo
+  Anti-Ro: Positivo   Anti-La: Positivo
+  Anti-dsDNA: Positivo   Anti-Sm: Negativo
+  C3: 80   C4: 20
+
+  RESULTADO ESPERADO:
+    -> Rheumatoid Arthritis: 96.6% [POSITIVO]
+    -> Systemic Lupus Erythematosus: 53.6% [POSITIVO]
+
+------------------------------------------------------------
+CASO #6 (Masculino)
+------------------------------------------------------------
+  Edad: 40
+  Genero: Masculino
+  ESR: 30   CRP: 5
+  RF: 80   Anti-CCP: 30
+  HLA-B27: Negativo   ANA: Positivo
+  Anti-Ro: Negativo   Anti-La: Negativo
+  Anti-dsDNA: Positivo   Anti-Sm: Negativo
+  C3: 80   C4: 20
+
+  RESULTADO ESPERADO:
+    -> Systemic Lupus Erythematosus: 95.9% [POSITIVO]
+    -> Rheumatoid Arthritis: 95.8% [POSITIVO]
+
+------------------------------------------------------------
+CASO #7 (Masculino)
+------------------------------------------------------------
+  Edad: 35
+  Genero: Masculino
+  ESR: 30   CRP: 5
+  RF: 80   Anti-CCP: 30
+  HLA-B27: Negativo   ANA: Positivo
+  Anti-Ro: Positivo   Anti-La: Negativo
+  Anti-dsDNA: Positivo   Anti-Sm: Negativo
+  C3: 80   C4: 20
+
+  RESULTADO ESPERADO:
+    -> Rheumatoid Arthritis: 96.5% [POSITIVO]
+    -> Systemic Lupus Erythematosus: 81.0% [POSITIVO]
+
+------------------------------------------------------------
+CASO #8 (Masculino)
+------------------------------------------------------------
+  Edad: 45
+  Genero: Masculino
+  ESR: 30   CRP: 5
+  RF: 80   Anti-CCP: 30
+  HLA-B27: Negativo   ANA: Positivo
+  Anti-Ro: Negativo   Anti-La: Positivo
+  Anti-dsDNA: Positivo   Anti-Sm: Negativo
+  C3: 80   C4: 20
+
+  RESULTADO ESPERADO:
+    -> Rheumatoid Arthritis: 95.3% [POSITIVO]
+    -> Systemic Lupus Erythematosus: 93.8% [POSITIVO]
+
+------------------------------------------------------------
+CASO #9 (Masculino)
+------------------------------------------------------------
+  Edad: 50
+  Genero: Masculino
+  ESR: 30   CRP: 5
+  RF: 80   Anti-CCP: 30
+  HLA-B27: Negativo   ANA: Positivo
+  Anti-Ro: Negativo   Anti-La: Negativo
+  Anti-dsDNA: Positivo   Anti-Sm: Positivo
+  C3: 80   C4: 20
+
+  RESULTADO ESPERADO:
+    -> Systemic Lupus Erythematosus: 99.3% [POSITIVO]
+    -> Rheumatoid Arthritis: 90.7% [POSITIVO]
+
+------------------------------------------------------------
+CASO #10 (Masculino)
+------------------------------------------------------------
+  Edad: 30
+  Genero: Masculino
+  ESR: 30   CRP: 5
+  RF: 80   Anti-CCP: 30
+  HLA-B27: Negativo   ANA: Positivo
+  Anti-Ro: Positivo   Anti-La: Positivo
+  Anti-dsDNA: Positivo   Anti-Sm: Negativo
+  C3: 80   C4: 20
+
+  RESULTADO ESPERADO:
+    -> Rheumatoid Arthritis: 94.8% [POSITIVO]
+    -> Systemic Lupus Erythematosus: 64.9% [POSITIVO]
+
+------------------------------------------------------------
+CASO #11 (Femenino)
+------------------------------------------------------------
+  Edad: 40
+  Genero: Femenino
+  ESR: 30   CRP: 5
+  RF: 80   Anti-CCP: 30
+  HLA-B27: Positivo   ANA: Positivo
+  Anti-Ro: Negativo   Anti-La: Negativo
+  Anti-dsDNA: Positivo   Anti-Sm: Negativo
+  C3: 80   C4: 20
+
+  RESULTADO ESPERADO:
+    -> Systemic Lupus Erythematosus: 95.5% [POSITIVO]
+    -> Rheumatoid Arthritis: 88.7% [POSITIVO]
+
+------------------------------------------------------------
+CASO #12 (Masculino)
+------------------------------------------------------------
+  Edad: 40
+  Genero: Masculino
+  ESR: 30   CRP: 5
+  RF: 80   Anti-CCP: 30
+  HLA-B27: Positivo   ANA: Positivo
+  Anti-Ro: Negativo   Anti-La: Negativo
+  Anti-dsDNA: Positivo   Anti-Sm: Negativo
+  C3: 80   C4: 20
+
+  RESULTADO ESPERADO:
+    -> Systemic Lupus Erythematosus: 94.9% [POSITIVO]
+    -> Rheumatoid Arthritis: 89.4% [POSITIVO]
+
+------------------------------------------------------------
+CASO #13 (Femenino)
+------------------------------------------------------------
+  Edad: 40
+  Genero: Femenino
+  ESR: 40   CRP: 15
+  RF: 40   Anti-CCP: 15
+  HLA-B27: Negativo   ANA: Positivo
+  Anti-Ro: Positivo   Anti-La: Positivo
+  Anti-dsDNA: Positivo   Anti-Sm: Positivo
+  C3: 60   C4: 12
+
+  RESULTADO ESPERADO:
+    -> Rheumatoid Arthritis: 93.3% [POSITIVO]
+    -> Systemic Lupus Erythematosus: 60.1% [POSITIVO]
+
+------------------------------------------------------------
+CASO #14 (Masculino)
+------------------------------------------------------------
+  Edad: 40
+  Genero: Masculino
+  ESR: 40   CRP: 15
+  RF: 40   Anti-CCP: 15
+  HLA-B27: Negativo   ANA: Positivo
+  Anti-Ro: Positivo   Anti-La: Positivo
+  Anti-dsDNA: Positivo   Anti-Sm: Positivo
+  C3: 60   C4: 12
+
+  RESULTADO ESPERADO:
+    -> Rheumatoid Arthritis: 93.1% [POSITIVO]
+    -> Systemic Lupus Erythematosus: 66.8% [POSITIVO]
+
+================================================================================
+FIN DEL DOCUMENTO
+================================================================================

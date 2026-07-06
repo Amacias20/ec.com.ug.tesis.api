@@ -162,10 +162,15 @@ def predict(data: PatientInput, db: Session = None) -> dict:
     positives = [p for p in predictions if p["is_positive"] and p["disease"] != "Normal"]
     overlap_syndrome_detected = len(positives) > 1
 
-    # Model name
+    # Model name — check multiple possible keys in config.yaml
     model_used = "unknown"
     if artifacts.config:
-        model_used = str(artifacts.config.get("nombre_modelo", "unknown"))
+        model_used = str(
+            artifacts.config.get("nombre_seleccion")
+            or artifacts.config.get("nombre_modelo")
+            or artifacts.config.get("arquitectura")
+            or "unknown"
+        )
 
     return {
         "predictions": predictions,
