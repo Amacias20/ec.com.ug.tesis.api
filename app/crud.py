@@ -142,6 +142,30 @@ def dashboard_disease_distribution(db: Session) -> dict[str, int]:
     return {row.primary_diagnosis: row.total for row in rows if row.primary_diagnosis}
 
 
+def dashboard_disease_by_gender(db: Session) -> dict[str, dict[str, int]]:
+    """Frequency of each disease as primary diagnosis, separated by gender (0: Female, 1: Male)."""
+    rows = (
+        db.query(Patient.primary_diagnosis, Patient.gender, func.count(Patient.id).label("total"))
+        .group_by(Patient.primary_diagnosis, Patient.gender)
+        .all()
+    )
+    
+    result = {}
+    for row in rows:
+        if not row.primary_diagnosis:
+            continue
+        
+        disease = row.primary_diagnosis
+        gender = "Masculino" if row.gender == 1 else "Femenino"
+        
+        if disease not in result:
+            result[disease] = {"Femenino": 0, "Masculino": 0}
+            
+        result[disease][gender] += row.total
+        
+    return result
+
+
 def dashboard_timeline(db: Session) -> list[dict]:
     """Predictions per day."""
     rows = (

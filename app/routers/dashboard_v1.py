@@ -33,6 +33,11 @@ def disease_distribution(db: Session = Depends(get_db)):
     return crud.dashboard_disease_distribution(db)
 
 
+@router.get("/disease-by-gender", summary="Frequency of diseases grouped by gender")
+def disease_by_gender(db: Session = Depends(get_db)):
+    return crud.dashboard_disease_by_gender(db)
+
+
 @router.get("/timeline", summary="Predictions per day")
 def timeline(db: Session = Depends(get_db)):
     return crud.dashboard_timeline(db)
