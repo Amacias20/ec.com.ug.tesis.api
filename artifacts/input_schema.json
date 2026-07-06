@@ -1,11 +1,54 @@
 {
   "variables_requeridas": [
-    "Age", "Gender", "ESR", "CRP", "RF", "Anti-CCP",
-    "HLA-B27", "ANA", "Anti-Ro", "Anti-La", "Anti-dsDNA", "Anti-Sm",
-    "C3", "C4"
+    "Age",
+    "Gender",
+    "ESR",
+    "CRP",
+    "RF",
+    "Anti-CCP",
+    "HLA-B27",
+    "ANA",
+    "Anti-Ro",
+    "Anti-La",
+    "Anti-dsDNA",
+    "Anti-Sm",
+    "C3",
+    "C4"
   ],
-  "variables_continuas": ["Age", "ESR", "CRP", "RF", "Anti-CCP", "C3", "C4"],
-  "variables_binarias": ["Gender", "HLA-B27", "ANA", "Anti-Ro", "Anti-La", "Anti-dsDNA", "Anti-Sm"],
+  "variables_continuas": [
+    "Age",
+    "ESR",
+    "CRP",
+    "RF",
+    "Anti-CCP",
+    "C3",
+    "C4"
+  ],
+  "variables_binarias": [
+    "Gender",
+    "HLA-B27",
+    "ANA",
+    "Anti-Ro",
+    "Anti-La",
+    "Anti-dsDNA",
+    "Anti-Sm"
+  ],
+  "orden_exacto_requerido": [
+    "Age",
+    "Gender",
+    "ESR",
+    "CRP",
+    "RF",
+    "Anti-CCP",
+    "HLA-B27",
+    "ANA",
+    "Anti-Ro",
+    "Anti-La",
+    "Anti-dsDNA",
+    "Anti-Sm",
+    "C3",
+    "C4"
+  ],
   "orden_etiquetas_salida": [
     "Ankylosing Spondylitis",
     "Normal",

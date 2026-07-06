@@ -1,12 +1,13 @@
 {
-  "umbral": 0.5,
-  "umbrales_optimos": {
-    "Ankylosing Spondylitis": 0.50,
-    "Psoriatic Arthritis": 0.50,
-    "Reactive Arthritis": 0.50,
-    "Rheumatoid Arthritis": 0.50,
-    "Sjögren's Syndrome": 0.50,
-    "Systemic Lupus Erythematosus": 0.50,
-    "Normal": 0.50
-  }
+  "formulacion": "multietiqueta",
+  "salida": {
+    "regla": "sigmoid(logit_i) >= 0.50  por etiqueta i",
+    "umbral": 0.5,
+    "descripcion": "Cada enfermedad se reporta como compatible si su sigmoide supera el umbral. El diagnóstico principal (argmax) siempre se incluye. La superposición es nativa del modelo.",
+    "cobertura_perfil_test": 0.9817981246552675,
+    "promedio_etiquetas_por_paciente": 1.4842801985659129,
+    "limitacion": "El dataset es de etiqueta única; los perfiles con >1 etiqueta se reportan como sospechas a descartar, NO como coexistencias confirmadas (no hay verdad de terreno de superposición)."
+  },
+  "calibracion_evaluada": true,
+  "ece_medio_reportado": 0.061526322630378265
 }

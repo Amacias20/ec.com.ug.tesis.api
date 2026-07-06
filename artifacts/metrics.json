@@ -1,0 +1,211 @@
+{
+  "modelo_final": {
+    "modelo": "Gated MLP (final, multietiqueta)",
+    "justificacion_seleccion": "Candidata por F1 Macro (Nested CV): Gated MLP (F1=0.7864).\n  - MLP vs Gated MLP: p=0.0000 (significativa)\n  - Gated MLP vs Residual: p=0.0000 (significativa)\nEmpates estadísticos: ['Gated MLP'].\nGanador (menor complejidad entre empates): Gated MLP (12551 parámetros).",
+    "hamming_loss": 0.07430462532503349,
+    "subset_accuracy": 0.5609487038058467,
+    "f1_micro": 0.7905840550743949,
+    "f1_macro": 0.7827213429888488,
+    "f1_weighted": 0.8086465973167928,
+    "roc_auc_macro": 0.9816514902160565,
+    "epoca_optima": 12,
+    "seed": 42,
+    "n_train_final": 8731,
+    "n_test": 1813
+  },
+  "calibracion": {
+    "brier_medio": 0.05195022374391556,
+    "ece_medio": 0.061526322630378265,
+    "brier_por_etiqueta": {
+      "Ankylosing Spondylitis": 0.11185894161462784,
+      "Normal": 0.04898938164114952,
+      "Psoriatic Arthritis": 0.044168487191200256,
+      "Reactive Arthritis": 0.06467650830745697,
+      "Rheumatoid Arthritis": 0.06330137699842453,
+      "Sjögren's Syndrome": 0.02556675300002098,
+      "Systemic Lupus Erythematosus": 0.005090117454528809
+    },
+    "ece_por_etiqueta": {
+      "Ankylosing Spondylitis": 0.11819007927248787,
+      "Normal": 0.06511895347261258,
+      "Psoriatic Arthritis": 0.05038897274909628,
+      "Reactive Arthritis": 0.09469415526066573,
+      "Rheumatoid Arthritis": 0.06403186047984975,
+      "Sjögren's Syndrome": 0.02711383116154655,
+      "Systemic Lupus Erythematosus": 0.01114640601638908
+    }
+  },
+  "perfil_multietiqueta": {
+    "umbral_compatible": 0.5,
+    "accuracy_principal": 0.8124655267512411,
+    "cobertura_perfil": 0.9817981246552675,
+    "ganancia_cobertura": 0.16933259790402644,
+    "pct_pacientes_multietiqueta": 0.42691671263099834,
+    "promedio_etiquetas": 1.4842801985659129,
+    "top_pares_coocurrencia": [
+      {
+        "diagnostico_a": "Ankylosing Spondylitis",
+        "diagnostico_b": "Rheumatoid Arthritis",
+        "n_pacientes": 292
+      },
+      {
+        "diagnostico_a": "Ankylosing Spondylitis",
+        "diagnostico_b": "Reactive Arthritis",
+        "n_pacientes": 186
+      },
+      {
+        "diagnostico_a": "Normal",
+        "diagnostico_b": "Sjögren's Syndrome",
+        "n_pacientes": 160
+      },
+      {
+        "diagnostico_a": "Ankylosing Spondylitis",
+        "diagnostico_b": "Psoriatic Arthritis",
+        "n_pacientes": 156
+      },
+      {
+        "diagnostico_a": "Reactive Arthritis",
+        "diagnostico_b": "Rheumatoid Arthritis",
+        "n_pacientes": 89
+      }
+    ],
+    "cobertura_por_clase": {
+      "Ankylosing Spondylitis": {
+        "accuracy_principal": 0.5705329153605015,
+        "cobertura_perfil": 0.9655172413793104,
+        "n": 319
+      },
+      "Normal": {
+        "accuracy_principal": 0.8755186721991701,
+        "cobertura_perfil": 0.9875518672199171,
+        "n": 241
+      },
+      "Psoriatic Arthritis": {
+        "accuracy_principal": 0.7873134328358209,
+        "cobertura_perfil": 0.9701492537313433,
+        "n": 268
+      },
+      "Reactive Arthritis": {
+        "accuracy_principal": 0.9090909090909091,
+        "cobertura_perfil": 0.987012987012987,
+        "n": 77
+      },
+      "Rheumatoid Arthritis": {
+        "accuracy_principal": 0.8501170960187353,
+        "cobertura_perfil": 0.9812646370023419,
+        "n": 427
+      },
+      "Sjögren's Syndrome": {
+        "accuracy_principal": 0.8381294964028777,
+        "cobertura_perfil": 0.9928057553956835,
+        "n": 278
+      },
+      "Systemic Lupus Erythematosus": {
+        "accuracy_principal": 1.0,
+        "cobertura_perfil": 1.0,
+        "n": 203
+      }
+    }
+  },
+  "baselines_clasicos": [
+    {
+      "Modelo": "Random Forest",
+      "F1 Macro": 0.8385788921,
+      "F1 Macro (DE)": 0.0070066628,
+      "F1 Micro": 0.8419328655,
+      "Hamming Loss": 0.0507762705,
+      "Tiempo CV (s)": 62.8849225044
+    },
+    {
+      "Modelo": "Extra Trees",
+      "F1 Macro": 0.7036377892,
+      "F1 Macro (DE)": 0.0118197284,
+      "F1 Micro": 0.7812749164,
+      "Hamming Loss": 0.0564501795,
+      "Tiempo CV (s)": 68.4629938602
+    },
+    {
+      "Modelo": "Logistic Regression",
+      "F1 Macro": 0.6831709719,
+      "F1 Macro (DE)": 0.0040907702,
+      "F1 Micro": 0.6426916797,
+      "Hamming Loss": 0.1506871711,
+      "Tiempo CV (s)": 6.4061951637
+    }
+  ],
+  "nested_cv_arquitecturas": [
+    {
+      "Arquitectura": "Gated MLP",
+      "F1 Macro (media)": 0.7863935977,
+      "F1 Macro (DE)": 0.0059215881,
+      "F1 Micro (media)": 0.7936290139,
+      "Hamming (media)": 0.0718461667,
+      "Subset Acc (media)": 0.5804103796
+    },
+    {
+      "Arquitectura": "MLP",
+      "F1 Macro (media)": 0.7778851764,
+      "F1 Macro (DE)": 0.0070922061,
+      "F1 Micro (media)": 0.7849239823,
+      "Hamming (media)": 0.0756150499,
+      "Subset Acc (media)": 0.5609415845
+    },
+    {
+      "Arquitectura": "Residual",
+      "F1 Macro (media)": 0.7707064312,
+      "F1 Macro (DE)": 0.0108105502,
+      "F1 Micro (media)": 0.7768475209,
+      "Hamming (media)": 0.0794538628,
+      "Subset Acc (media)": 0.5450709671
+    }
+  ],
+  "mcnemar": [
+    {
+      "Comparación": "MLP vs Gated MLP",
+      "Solo MLP": 378.0,
+      "Solo Gated MLP": 578.0,
+      "Estadístico": 41.4236,
+      "p-valor": 0.0,
+      "¿Significativo (α=0.05)?": "Sí",
+      "Solo Residual": null
+    },
+    {
+      "Comparación": "MLP vs Residual",
+      "Solo MLP": 554.0,
+      "Solo Gated MLP": null,
+      "Estadístico": 27.7714,
+      "p-valor": 0.0,
+      "¿Significativo (α=0.05)?": "Sí",
+      "Solo Residual": 391.0
+    },
+    {
+      "Comparación": "Gated MLP vs Residual",
+      "Solo MLP": null,
+      "Solo Gated MLP": 687.0,
+      "Estadístico": 129.6182,
+      "p-valor": 0.0,
+      "¿Significativo (α=0.05)?": "Sí",
+      "Solo Residual": 324.0
+    }
+  ],
+  "intervalos_confianza_bootstrap": [
+    {
+      "Arquitectura": "MLP",
+      "F1 Macro (media)": 0.7779,
+      "IC 95% inferior": 0.7717,
+      "IC 95% superior": 0.7822
+    },
+    {
+      "Arquitectura": "Gated MLP",
+      "F1 Macro (media)": 0.7864,
+      "IC 95% inferior": 0.7818,
+      "IC 95% superior": 0.791
+    },
+    {
+      "Arquitectura": "Residual",
+      "F1 Macro (media)": 0.7707,
+      "IC 95% inferior": 0.7619,
+      "IC 95% superior": 0.7787
+    }
+  ]
+}

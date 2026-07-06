@@ -18,6 +18,7 @@ import pandas as pd
 import torch
 from sqlalchemy.orm import Session
 
+
 from app.model import artifacts
 from app.schemas import PatientInput
 from app import crud

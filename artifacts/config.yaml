@@ -1,5 +1,12 @@
-input_dim: 14
-num_classes: 7
-hidden_dim: 64
+arquitectura: RedAutoinmuneGatedMLP
+descripcion: MLP con compuerta (gating) sobre el espacio oculto de 64 dim.
 dropout: 0.2
-nombre_modelo: "RedAutoinmuneGated-v1.0"
+formulacion: MULTIETIQUETA (7 sigmoides independientes, BCEWithLogitsLoss)
+hidden_dim: 64
+input_dim: 26
+justificacion_seleccion: "Candidata por F1 Macro (Nested CV): Gated MLP (F1=0.7864).\n\
+  \  - MLP vs Gated MLP: p=0.0000 (significativa)\n  - Gated MLP vs Residual: p=0.0000\
+  \ (significativa)\nEmpates estadísticos: ['Gated MLP'].\nGanador (menor complejidad\
+  \ entre empates): Gated MLP (12551 parámetros)."
+nombre_seleccion: Gated MLP
+num_classes: 7
