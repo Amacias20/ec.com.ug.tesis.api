@@ -167,6 +167,8 @@ def explain_patient(patient: PatientInput, db: Session = None) -> dict:
     top_negative: Dict[str, List[str]] = {}
     shap_values: Dict[str, Dict[str, float]] = {}
 
+    natural_language: Dict[str, str] = {}
+
     for compatible in result["predictions"]:
         if not compatible.get("is_positive"):
             continue
@@ -178,12 +180,29 @@ def explain_patient(patient: PatientInput, db: Session = None) -> dict:
 
         positives = [f for f, weight in pairs if weight > 0]
         negatives = [f for f, weight in pairs if weight < 0]
-        top_positive[compatible["disease"]] = positives[:_NUM_FEATURES_EXPLAIN]
-        top_negative[compatible["disease"]] = negatives[:_NUM_FEATURES_EXPLAIN]
+        
+        top_pos = positives[:_NUM_FEATURES_EXPLAIN]
+        top_neg = negatives[:_NUM_FEATURES_EXPLAIN]
+        
+        top_positive[compatible["disease"]] = top_pos
+        top_negative[compatible["disease"]] = top_neg
+        
+        # Simple Natural Language Explanation
+        if top_pos:
+            factors = ", ".join(top_pos)
+            text = f"El modelo detectó un alto riesgo de {compatible['disease']} impulsado principalmente por: {factors}."
+            if top_neg:
+                text += f" Aunque los valores de {', '.join(top_neg)} redujeron ligeramente el riesgo, no fueron suficientes para descartarlo."
+        else:
+            text = f"El modelo detectó características consistentes con {compatible['disease']} basadas en tu perfil clínico general."
+            
+        natural_language[compatible["disease"]] = text
 
     return {
         "shap_values": shap_values,
         "lime_explanation": lime_explanation,
         "top_positive_features": top_positive,
         "top_negative_features": top_negative,
+        "natural_language_explanation": natural_language,
     }
+
