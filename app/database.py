@@ -15,9 +15,18 @@ from sqlalchemy.orm import DeclarativeBase, sessionmaker
 # Load .env from the project root (one level above app/)
 load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+psycopg://postgres:postgres@localhost:5432/autoimmune_db")
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./app.db")
 
-engine = create_engine(DATABASE_URL, echo=False, pool_pre_ping=True)
+# Railway inyecta postgresql:// pero psycopg3 requiere postgresql+psycopg://
+if DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg://", 1)
+
+
+if DATABASE_URL.startswith("sqlite"):
+    engine = create_engine(DATABASE_URL, echo=False, connect_args={"check_same_thread": False})
+else:
+    engine = create_engine(DATABASE_URL, echo=False, pool_pre_ping=True)
+
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
