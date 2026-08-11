@@ -195,3 +195,20 @@ def upsert_thresholds(db: Session, thresholds: dict) -> None:
             new_record = DiseaseThreshold(disease_name=disease_name, threshold_value=val)
             db.add(new_record)
     db.commit()
+
+
+def dashboard_biomarkers_frequency(db: Session) -> dict[str, int]:
+    """Returns how many patients had each biomarker non-null (i.e., was measured)."""
+    binary_biomarkers = ["hla_b27", "ana", "anti_ro", "anti_la", "anti_dsdna", "anti_sm"]
+    continuous_biomarkers = ["esr", "crp", "rf", "anti_ccp", "c3", "c4"]
+    result = {}
+    total = db.query(func.count(Patient.id)).scalar() or 0
+    if total == 0:
+        return {}
+    for col_name in binary_biomarkers + continuous_biomarkers:
+        col = getattr(Patient, col_name)
+        count = db.query(func.count(Patient.id)).filter(col.isnot(None)).scalar() or 0
+        if count > 0:
+            result[col_name.upper()] = count
+    return result
+

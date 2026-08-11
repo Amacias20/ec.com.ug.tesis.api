@@ -46,3 +46,9 @@ def disease_by_gender(db: Session = Depends(get_db)):
 @router.get("/timeline", summary="Predictions per day")
 def timeline(db: Session = Depends(get_db)):
     return crud.dashboard_timeline(db)
+
+
+@router.get("/biomarkers-frequency", summary="Frequency of each biomarker being measured")
+def biomarkers_frequency(db: Session = Depends(get_db)):
+    return crud.dashboard_biomarkers_frequency(db)
+
