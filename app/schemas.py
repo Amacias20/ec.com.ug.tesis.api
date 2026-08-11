@@ -61,6 +61,7 @@ class ExplainabilityResponse(BaseModel):
     lime_explanation: dict = Field(default_factory=dict)
     top_positive_features: dict = Field(default_factory=dict)
     top_negative_features: dict = Field(default_factory=dict)
+    natural_language_explanation: dict = Field(default_factory=dict)
 
 
 class ModelInfoResponse(BaseModel):
